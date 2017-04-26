@@ -1,0 +1,33 @@
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i {{ internal_nic }} -p vrrp -j ACCEPT
+-A INPUT -i {{ internal_nic }} -p udp -m udp --dport 3780 -j ACCEPT
+-A INPUT -i {{ internal_nic }} -p udp -m udp --dport 8848 -j ACCEPT
+-A INPUT -i {{ internal_nic }} -p udp -m udp --dport 9000 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
+#-A INPUT -p tcp -m state --state NEW -m tcp --dport 9090 -j ACCEPT
+-A FORWARD -i {{ external_nic }} -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A FORWARD -i {{ internal_nic }} -o {{ external_nic }} -j ACCEPT
+COMMIT
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -o {{ external_nic }} -s {{ internal_net }} -j SNAT --to {{ external_vip }}
+COMMIT

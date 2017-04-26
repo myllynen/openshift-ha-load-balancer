@@ -1,0 +1,141 @@
+vrrp_sync_group VG1 {
+    group {
+        external
+        internal
+    }
+    notify_master "/usr/libexec/keepalived/primary-backup.sh primary"
+    notify_backup "/usr/libexec/keepalived/primary-backup.sh backup"
+    notify_fault "/usr/libexec/keepalived/primary-backup.sh fault"
+}
+
+
+vrrp_instance external {
+    state BACKUP
+    interface {{ internal_nic }}
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1436708
+    lvs_sync_daemon_interface {{ internal_nic }}
+    track_interface {
+        {{ external_nic }}
+        {{ internal_nic }}
+    }
+    unicast_src_ip {{ hostvars[inventory_hostname]['ansible_' + internal_nic]['ipv4']['address'] }}
+    unicast_peer {
+{% for host in play_hosts %}
+{% if inventory_hostname != hostvars[host]['inventory_hostname'] %}
+        {{ hostvars[host]['ansible_' + internal_nic]['ipv4']['address'] }}
+{% endif %}
+{% endfor %}
+    }
+    virtual_router_id 1
+    priority 100
+    advert_int 1
+    garp_master_delay 1
+    authentication {
+        auth_type PASS
+        auth_pass 1112
+    }
+    virtual_ipaddress {
+        {{ external_vip }}/32 dev {{ external_nic }}
+    }
+}
+
+vrrp_instance internal {
+    state BACKUP
+    interface {{ internal_nic }}
+    unicast_src_ip {{ hostvars[inventory_hostname]['ansible_' + internal_nic]['ipv4']['address'] }}
+    unicast_peer {
+{% for host in play_hosts %}
+{% if inventory_hostname != hostvars[host]['inventory_hostname'] %}
+        {{ hostvars[host]['ansible_' + internal_nic]['ipv4']['address'] }}
+{% endif %}
+{% endfor %}
+    }
+    virtual_router_id 2
+    priority 100
+    advert_int 1
+    garp_master_delay 1
+    authentication {
+        auth_type PASS
+        auth_pass 1112
+    }
+    virtual_ipaddress {
+        {{ internal_vip }}/32 dev {{ internal_nic }}
+    }
+}
+
+
+virtual_server {{ external_vip }} 80 {
+    delay_loop 6
+    lvs_sched rr
+    lvs_method NAT
+    persistence_timeout 300
+    protocol TCP
+
+{% for router in routers %}
+    real_server {{ router }} 80 {
+        weight 1
+        TCP_CHECK {
+            connect_timeout 3
+        }
+    }
+{% endfor %}
+}
+
+virtual_server {{ external_vip }} 443 {
+    delay_loop 6
+    lvs_sched rr
+    lvs_method NAT
+    persistence_timeout 300
+    protocol TCP
+
+{% for router in routers %}
+    real_server {{ router }} 443 {
+        weight 1
+        TCP_CHECK {
+            connect_timeout 3
+        }
+    }
+{% endfor %}
+}
+
+virtual_server {{ external_vip }} 8443 {
+    delay_loop 6
+    lvs_sched rr
+    lvs_method NAT
+    persistence_timeout 300
+    protocol TCP
+
+{% for master in masters %}
+    real_server {{ master }} 8443 {
+        weight 1
+        SSL_GET {
+            url {
+                path /healthz
+                digest 444bcb3a3fcf8389296c49467f27e1d6
+            }
+        }
+    }
+{% endfor %}
+}
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1443473
+# https://bugzilla.redhat.com/show_bug.cgi?id=1427521
+#virtual_server {{ external_vip }} 9090 {
+#    delay_loop 6
+#    lvs_sched rr
+#    lvs_method NAT
+#    persistence_timeout 300
+#    protocol TCP
+#
+#{% for master in masters %}
+#    real_server {{ master }} 9090 {
+#        weight 1
+#        SSL_GET {
+#            url {
+#                path /ping
+#                digest 635d692010c464cfc1380baaec004e29
+#            }
+#        }
+#    }
+#{% endfor %}
+#}

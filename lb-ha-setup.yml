@@ -1,0 +1,90 @@
+---
+- name: Configure OpenShift HA Load Balancer
+  hosts: lb
+  become: true
+  tasks:
+    - name: Detect Atomic Host
+      set_fact:
+        is_atomic: "{{ ansible_cmdline.root == '/dev/mapper/atomicos-root' }}"
+
+    - name: Remove unhelpful packages
+      package: name={{ item }} state=absent
+      with_items:
+        - '*firewall*'
+      when: not is_atomic
+
+    - name: Install needed packages
+      package: name={{ item }} state=present
+      with_items:
+        - conntrack-tools
+        - haproxy
+        - iptables
+        - iptables-services
+        - ipvsadm
+        - keepalived
+        - rsyslog
+      when: not is_atomic
+
+    - name: Configure iptables
+      template: src=iptables.j2 dest=/etc/sysconfig/iptables
+      register: iptables_config
+
+    - name: Restart iptables
+      service: name=iptables state=restarted
+      when: iptables_config | changed
+
+    - name: Enable iptables
+      service: name=iptables enabled=yes state=started
+
+    - name: Configure conntrackd
+      template: src=conntrackd.conf.j2 dest=/etc/conntrackd/conntrackd.conf
+      register: conntrackd_config
+
+    - name: Restart conntrackd
+      service: name=conntrackd state=restarted
+      when: conntrackd_config | changed
+
+    - name: Enable conntrackd
+      service: name=conntrackd enabled=yes state=started
+
+    - name: Enable IPv4 forwarding sysctl
+      sysctl: name=net.ipv4.ip_forward value=1 sysctl_set=yes
+
+    - name: Copy conntrackd/keepalived script
+      copy: src=primary-backup.sh dest=/usr/libexec/keepalived/primary-backup.sh mode=0755
+
+    - name: Configure keepalived
+      template: src=keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf
+      register: keepalived_config
+
+    - name: Restart keepalived
+      service: name=keepalived state=restarted
+      when: keepalived_config | changed
+
+    - name: Enable keepalived
+      service: name=keepalived enabled=yes state=started
+
+    - name: Configure rsyslog for haproxy
+      copy: src=haproxy.conf dest=/etc/rsyslog.d/haproxy.conf
+      register: rsyslog_config
+
+    - name: Restart rsyslog
+      service: name=rsyslog state=restarted
+      when: rsyslog_config | changed
+
+    - name: Enable rsyslog
+      service: name=rsyslog enabled=yes state=started
+
+    - name: Enable non-local IP binding sysctl
+      sysctl: name=net.ipv4.ip_nonlocal_bind value=1 sysctl_set=yes
+
+    - name: Configure haproxy
+      template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg
+      register: haproxy_config
+
+    - name: Restart haproxy
+      service: name=haproxy state=restarted
+      when: haproxy_config | changed
+
+    - name: Enable haproxy
+      service: name=haproxy enabled=yes state=started

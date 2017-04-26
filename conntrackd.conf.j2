@@ -1,0 +1,54 @@
+Sync {
+	Mode FTFW {
+		CommitTimeout 60
+		PurgeTimeout 10
+		DisableExternalCache off
+	}
+
+	UDP {
+		IPv4_address {{ hostvars[inventory_hostname]['ansible_' + internal_nic]['ipv4']['address'] }}
+{% for host in play_hosts %}
+{% if inventory_hostname != hostvars[host]['inventory_hostname'] %}
+		IPv4_Destination_Address {{ hostvars[host]['ansible_' + internal_nic]['ipv4']['address'] }}
+{% endif %}
+{% endfor %}
+		Port 3780
+		Interface {{ internal_nic }}
+		SndSocketBuffer 1249280
+		RcvSocketBuffer 1249280
+		Checksum on
+	}
+}
+
+General {
+	Nice -20
+	HashSize 32768
+	HashLimit 131072
+	LogFile /var/log/conntrackd.log
+	LockFile /var/lock/conntrack.lock
+	UNIX {
+		Path /var/run/conntrackd.ctl
+		Backlog 20
+	}
+	NetlinkBufferSize 2097152
+	NetlinkBufferSizeMaxGrowth 8388608
+	Filter From Userspace {
+		Protocol Accept {
+			TCP
+			#SCTP
+			#DCCP
+			UDP
+			ICMP
+			#IPv6-ICMP
+		}
+		Address Ignore {
+			IPv4_address 127.0.0.1
+			IPv4_address {{ external_vip }}
+			IPv4_address {{ internal_vip }}
+{% for host in play_hosts %}
+			IPv4_address {{ hostvars[host]['ansible_' + external_nic]['ipv4']['address'] }}
+			IPv4_address {{ hostvars[host]['ansible_' + internal_nic]['ipv4']['address'] }}
+{% endfor %}
+		}
+	}
+}
