@@ -84,7 +84,7 @@ conntrack -L -p TCP --dport 22
 ## TODO
 
 * Consider HAProxy for ingress traffic as well
-  * Might allow using this setup on masters
+  * To pave way for using this setup on masters or routers
     * Would remove the need for additional nodes
 * Test with N load balancers and with N routers
   * N load balancers would need to use multicast instead of UDP
