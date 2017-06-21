@@ -2,52 +2,52 @@
 
 [![License: Apache v2](https://img.shields.io/badge/license-Apache%20v2-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Ansible playbook for one-step installation of a highly available (HA) 
-load balancer (LB) setup for OpenShift. This setup provides fault 
-tolerancy, connection failover, and load balancing across Openshift 
-master and router nodes. Supports both ingress traffic (to OpenShift 
-pods) as well as egress traffic (pods initiating connections to external 
-networks). Only the load balancers are on the public network thus no 
+Ansible playbook for one-step installation of a highly available (HA)
+load balancer (LB) setup for OpenShift. This setup provides fault
+tolerancy, connection failover, and load balancing across Openshift
+master and router nodes. Supports both ingress traffic (to OpenShift
+pods) as well as egress traffic (pods initiating connections to external
+networks). Only the load balancers are on the public network thus no
 OpenShift nodes are exposed to a potentially hostile external network.
 
 ## Technical Description
 
-The OpenShift Ansible installer provides only very limited load balancer 
-setup which lacks high-availability support. Hardware load balancers are 
-a great alternative but they are not always available or feasible. 
-Luckily, all modern Linux distributions come with all the needed 
-components to build highly available load balancers. Notably, RHEL 7 
-contains all the needed components on its base channel (so no need for 
+The OpenShift Ansible installer provides only very limited load balancer
+setup which lacks high-availability support. Hardware load balancers are
+a great alternative but they are not always available or feasible.
+Luckily, all modern Linux distributions come with all the needed
+components to build highly available load balancers. Notably, RHEL 7
+contains all the needed components on its base channel (so no need for
 additional subscriptions).
 
-Below we describe highly available load balancer setup with standard 
-Linux distribution components using two Linux servers (can be virtual 
-machines, VMs). Everything described below will be automatically 
+Below we describe highly available load balancer setup with standard
+Linux distribution components using two Linux servers (can be virtual
+machines, VMs). Everything described below will be automatically
 configured by the provided Ansible playbook.
 
-The load balancers are connected to an external network, for example the 
-Internet, with one NIC (network interface card) and to an internal 
+The load balancers are connected to an external network, for example the
+Internet, with one NIC (network interface card) and to an internal
 network with another NIC.
 
-keepalived is used to provide a VIP (virtual IP) on both sides. For 
-ingress traffic towards OpenShift, keepalived does load balancing itself 
-(by using the kernel IPVS modules - for a higher level description see 
-https://en.wikipedia.org/wiki/Linux_Virtual_Server). All keepalived 
+keepalived is used to provide a VIP (virtual IP) on both sides. For
+ingress traffic towards OpenShift, keepalived does load balancing itself
+(by using the kernel IPVS modules - for a higher level description see
+https://en.wikipedia.org/wiki/Linux_Virtual_Server). All keepalived
 related management traffic is using the internal network only.
 
-For OpenShift internal communication to the master API on the intranet 
-side HAProxy is used for load balancing (keepalived provides only the 
-internal VIP but not load balancing as RHEL does not support connections 
+For OpenShift internal communication to the master API on the intranet
+side HAProxy is used for load balancing (keepalived provides only the
+internal VIP but not load balancing as RHEL does not support connections
 from keepalived real servers to their own VIP).
 
-For egress traffic initiated from OpenShift nodes iptables/netfilter is 
-used to provide SNAT using the external VIP and conntrackd provides 
+For egress traffic initiated from OpenShift nodes iptables/netfilter is
+used to provide SNAT using the external VIP and conntrackd provides
 connection synchronization to ensure transparent connection failovers.
 
 Linux iptables filters all the incoming traffic.
 
-keepalived logs to syslog, conntrackd to its own log file. haproxy logs 
-most important messages to itss own log and a separate log containing 
+keepalived logs to syslog, conntrackd to its own log file. haproxy logs
+most important messages to its own log and a separate log containing
 connection level information can be easily enabled.
 
 ## Prerequisites
