@@ -10,7 +10,7 @@ global
     # Uncomment to enable connection level logging and debug messages
 #    log         127.0.0.1 local1 debug
 
-    stats socket /var/lib/haproxy/stats
+    stats socket /var/lib/haproxy/stats mode 600
 
 # See https://docs.openshift.com/container-platform/latest/architecture/core_concepts/routes.html#env-variables
 defaults
