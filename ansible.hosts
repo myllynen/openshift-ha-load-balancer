@@ -5,7 +5,9 @@ lb02.example.com
 [lb:vars]
 external_nic=eth0
 internal_nic=eth1
-external_vip=192.168.122.220
+# Use the same VIP for API/apps if no separation is needed
+external_vip_api=192.168.122.220
+external_vip_apps=192.168.122.220
 internal_vip=192.168.200.200
 internal_net=192.168.200.0/24
 masters=["192.168.200.254", "192.168.200.149", "192.168.200.209"]

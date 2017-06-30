@@ -43,7 +43,10 @@ General {
 		}
 		Address Ignore {
 			IPv4_address 127.0.0.1
-			IPv4_address {{ external_vip }}
+			IPv4_address {{ external_vip_api }}
+{% if external_vip_api != external_vip_apps %}
+			IPv4_address {{ external_vip_apps }}
+{% endif %}
 			IPv4_address {{ internal_vip }}
 {% for host in play_hosts %}
 			IPv4_address {{ hostvars[host]['ansible_' + external_nic]['ipv4']['address'] }}

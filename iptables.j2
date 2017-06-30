@@ -29,5 +29,8 @@ COMMIT
 :INPUT ACCEPT [0:0]
 :OUTPUT ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]
--A POSTROUTING -o {{ external_nic }} -s {{ internal_net }} -j SNAT --to {{ external_vip }}
+-A POSTROUTING -o {{ external_nic }} -s {{ internal_net }} -j SNAT --to {{ external_vip_api }}
+{% if external_vip_api != external_vip_apps %}
+-A POSTROUTING -o {{ external_nic }} -s {{ internal_net }} -j SNAT --to {{ external_vip_apps }}
+{% endif %}
 COMMIT

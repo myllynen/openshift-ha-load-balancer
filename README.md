@@ -50,6 +50,9 @@ keepalived logs to syslog, conntrackd to its own log file. haproxy logs
 most important messages to its own log and a separate log containing
 connection level information can be easily enabled.
 
+Optionally, a separate external VIP for each API and apps can be used to
+allow traffic filtering to API VIP.
+
 ## Prerequisites
 
 * Two Fedora / RHEL servers (can be VMs) to act as load balancers

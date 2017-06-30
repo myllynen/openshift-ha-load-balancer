@@ -35,7 +35,10 @@ vrrp_instance external {
         auth_pass 1112
     }
     virtual_ipaddress {
-        {{ external_vip }}/32 dev {{ external_nic }}
+        {{ external_vip_api }}/32 dev {{ external_nic }}
+{% if external_vip_api != external_vip_apps %}
+        {{ external_vip_apps }}/32 dev {{ external_nic }}
+{% endif %}
     }
 }
 
@@ -64,7 +67,7 @@ vrrp_instance internal {
 }
 
 
-virtual_server {{ external_vip }} 80 {
+virtual_server {{ external_vip_apps }} 80 {
     delay_loop 6
     lvs_sched rr
     lvs_method NAT
@@ -81,7 +84,7 @@ virtual_server {{ external_vip }} 80 {
 {% endfor %}
 }
 
-virtual_server {{ external_vip }} 443 {
+virtual_server {{ external_vip_apps }} 443 {
     delay_loop 6
     lvs_sched rr
     lvs_method NAT
@@ -98,7 +101,7 @@ virtual_server {{ external_vip }} 443 {
 {% endfor %}
 }
 
-virtual_server {{ external_vip }} 8443 {
+virtual_server {{ external_vip_api }} 8443 {
     delay_loop 6
     lvs_sched rr
     lvs_method NAT
@@ -120,7 +123,7 @@ virtual_server {{ external_vip }} 8443 {
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1443473
 # Adjust iptables.j2 as well when disabling/enabling
-virtual_server {{ external_vip }} 9090 {
+virtual_server {{ external_vip_api }} 9090 {
     delay_loop 6
     lvs_sched rr
     lvs_method NAT
