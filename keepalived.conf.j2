@@ -119,23 +119,23 @@ virtual_server {{ external_vip }} 8443 {
 }
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1443473
-# https://bugzilla.redhat.com/show_bug.cgi?id=1427521
-#virtual_server {{ external_vip }} 9090 {
-#    delay_loop 6
-#    lvs_sched rr
-#    lvs_method NAT
-#    persistence_timeout 300
-#    protocol TCP
-#
-#{% for master in masters %}
-#    real_server {{ master }} 9090 {
-#        weight 1
-#        SSL_GET {
-#            url {
-#                path /ping
-#                digest 635d692010c464cfc1380baaec004e29
-#            }
-#        }
-#    }
-#{% endfor %}
-#}
+# Adjust iptables.j2 as well when disabling/enabling
+virtual_server {{ external_vip }} 9090 {
+    delay_loop 6
+    lvs_sched rr
+    lvs_method NAT
+    persistence_timeout 300
+    protocol TCP
+
+{% for master in masters %}
+    real_server {{ master }} 9090 {
+        weight 1
+        SSL_GET {
+            url {
+                path /ping
+                digest 635d692010c464cfc1380baaec004e29
+            }
+        }
+    }
+{% endfor %}
+}

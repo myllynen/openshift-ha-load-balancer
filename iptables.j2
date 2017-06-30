@@ -13,7 +13,7 @@
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
-#-A INPUT -p tcp -m state --state NEW -m tcp --dport 9090 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 9090 -j ACCEPT
 -A FORWARD -i {{ external_nic }} -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A FORWARD -i {{ internal_nic }} -o {{ external_nic }} -j ACCEPT
 COMMIT
