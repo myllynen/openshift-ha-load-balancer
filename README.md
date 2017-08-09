@@ -89,6 +89,8 @@ conntrack -L -p TCP --dport 22
 * Consider HAProxy for ingress traffic as well
   * To pave way for using this setup on masters or routers
     * Would remove the need for additional nodes
+  * UDP/SNMP would be affected, may or may not be relevant,
+    HAProxy already in use in OpenShift
 * Test with N load balancers and with N routers
   * N load balancers would need to use multicast instead of UDP
 * Fine-tune conntrackd/haproxy/keepalived/kernel parameters
