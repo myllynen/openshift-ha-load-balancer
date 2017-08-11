@@ -94,10 +94,8 @@ conntrack -L -p TCP --dport 22
 * Test with N load balancers and with N routers
   * N load balancers would need to use multicast instead of UDP
 * Fine-tune conntrackd/haproxy/keepalived/kernel parameters
-  * https://bugzilla.redhat.com/show_bug.cgi?id=1365002
 * IPv6 support (NB. OpenShift does not support IPv6 yet)
   * https://bugzilla.redhat.com/show_bug.cgi?id=871569
-  * https://bugzilla.redhat.com/show_bug.cgi?id=1425552
   * https://bugzilla.redhat.com/show_bug.cgi?id=1436708
 
 ## License
